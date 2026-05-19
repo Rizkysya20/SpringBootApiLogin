@@ -1,5 +1,6 @@
 package demo.project.com.service;
 
+import demo.project.com.dto.ApiResponse;
 import demo.project.com.entity.User;
 import demo.project.com.repository.UserRepository;
 import org.springframework.security.crypto.bcrypt.BCrypt;
@@ -10,13 +11,14 @@ public class AuthService {
 
     private final UserRepository userRepository;
 
-    public AuthService(UserRepository userRepository){
+    public AuthService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
-    public String register(User user){
-        if (userRepository.findByEmail(user.getEmail()).isPresent()){
-            return "Email sudah terdaftar";
+    public ApiResponse register(User user) {
+
+        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+            return new ApiResponse(false, "Email already registered");
         }
 
         String hashed = BCrypt.hashpw(user.getPassword(), BCrypt.gensalt());
@@ -24,22 +26,21 @@ public class AuthService {
 
         userRepository.save(user);
 
-        return "Register berhasil";
+        return new ApiResponse(true, "Register success");
     }
 
-    public String login(User user){
+    public ApiResponse login(User user) {
 
         var existing = userRepository.findByEmail(user.getEmail());
 
-        if(existing.isEmpty()){
-            return "User tidak terbaca";
+        if (existing.isEmpty()) {
+            return new ApiResponse(false, "User not found");
         }
 
-        if(BCrypt.checkpw(user.getPassword(), existing.get().getPassword())){
-            return "Login sukses";
+        if (BCrypt.checkpw(user.getPassword(), existing.get().getPassword())) {
+            return new ApiResponse(true, "Login success");
         }
 
-        return "Password salah mas";
+        return new ApiResponse(false, "Wrong password");
     }
 }
-
